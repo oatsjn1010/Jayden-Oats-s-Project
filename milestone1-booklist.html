@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Milestone 1 - Book List </title>
+  <style>
+    body {
+      background-color: #e0e0e0;
+      color: #000;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #2c3e50;
+    }
+
+    .nav {
+      margin-bottom: 20px;
+    }
+
+    .nav a {
+      margin-right: 15px;
+      text-decoration: none;
+      color: #2980b9;
+      font-weight: bold;
+    }
+
+    .nav a:hover {
+      text-decoration: underline;
+    }
+
+    .book-list-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .book-card {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      width: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .book-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+
+    .book-card h3 {
+      font-size: 18px;
+      margin: 10px 0 5px;
+    }
+
+    .book-card p {
+      font-size: 14px;
+      margin: 5px 0;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+  <div class="nav">
+    <a href="index.html">Home</a>
+    <a href="milestone1.html">Milestone 1 </a>
+    <a href="milestone1-list.html">Milestone 1 Book List</a>
+    <a href="milestone2.html">Milestone 2</a>
+    <a href="milestone3.html">Milestone 3</a>
+    <a href="milestone4.html">Milestone 4</a>
+  </div>
+
+  <h1>Milestone 1: Book List</h1>
+  <div class="book-list-container" id="book-list"></div>
+
+  <script>
+    $(document).ready(function () {
+      const searchUrl = "https://www.googleapis.com/books/v1/volumes?q=modern%20web";
+
+      $.getJSON(searchUrl, function (data) {
+        if (!data.items || data.items.length === 0) {
+          $('#book-list').html('<p>No results found.</p>');
+          return;
+        }
+
+        data.items.forEach(book => {
+          const info = book.volumeInfo;
+          const title = info.title || "No Title";
+          const authors = info.authors ? info.authors.join(", ") : "Unknown Author";
+          const description = info.description ? info.description.substring(0, 100) + "..." : "No description available.";
+          const thumbnail = info.imageLinks ? info.imageLinks.thumbnail : "";
+
+          const html = `
+            <div class="book-card">
+              ${thumbnail ? `<img src="${thumbnail}" alt="Book Cover">` : ''}
+              <h3>${title}</h3>
+              <p><span class="label">Authors:</span> ${authors}</p>
+              <p>${description}</p>
+            </div>
+          `;
+          $('#book-list').append(html);
+        });
+      }).fail(function () {
+        $('#book-list').html('<p>Error loading book list from Google Books API.</p>');
+      });
+    });
+  </script>
+
+</body>
+</html>
+

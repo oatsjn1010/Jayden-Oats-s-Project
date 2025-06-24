@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Milestone 1 - Single Book Display</title>
+  <style>
+    body {
+      background-color: #e0e0e0;
+      color: #000;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    .book-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+    }
+    .book-container img {
+      max-width: 100px;
+      float: right;
+      margin-left: 20px;
+    }
+    .label {
+      font-weight: bold;
+    }
+    .clearfix {
+      overflow: auto;
+    }
+    .nav {
+      margin-bottom: 20px;
+    }
+    .nav a {
+      margin-right: 15px;
+      text-decoration: none;
+      color: #2980b9;
+      font-weight: bold;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+  <div class="nav">
+    <a href="index.html">Home</a>
+    <a href="milestone1.html">Milestone 1</a>
+    <a href="milestone1-booklist.html">Milestone 1 Book List</a>
+    <a href="milestone2.html">Milestone 2</a>
+    <a href="milestone3.html">Milestone 3</a>
+    <a href="milestone4.html">Milestone 4</a>
+  </div>
+
+  <h1>Milestone 1: Display a Single Book's Data</h1>
+  <div class="book-container" id="book"></div>
+
+  <script>
+    $(document).ready(function () {
+      const bookId = "Wfan6L9RGgYC";
+      const url = `https://www.googleapis.com/books/v1/volumes/${bookId}`;
+
+      $.getJSON(url, function (data) {
+        const book = data.volumeInfo;
+
+        const title = book.title || "N/A";
+        const authors = book.authors ? book.authors.join(', ') : "N/A";
+        const publisher = book.publisher || "N/A";
+        const publishedDate = book.publishedDate || "N/A";
+        const description = book.description || "N/A";
+        const thumbnail = book.imageLinks ? book.imageLinks.thumbnail : "";
+
+        const html = `
+          <div class="clearfix">
+            <img src="${thumbnail}" alt="Book Cover">
+            <p><span class="label">Title:</span> ${title}</p>
+            <p><span class="label">Authors:</span> ${authors}</p>
+            <p><span class="label">Publisher:</span> ${publisher}</p>
+            <p><span class="label">Published Date:</span> ${publishedDate}</p>
+            <p><span class="label">Description:</span> ${description}</p>
+          </div>
+        `;
+
+        $('#book').html(html);
+      }).fail(function () {
+        $('#book').html('<p>Failed to load book data from the API.</p>');
+      });
+    });
+  </script>
+
+</body>
+</html>
+
+

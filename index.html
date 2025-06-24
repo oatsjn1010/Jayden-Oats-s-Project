@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book Data Project - Jayden Oats</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #e0e0e0; /* Light gray background */
+      color: #000000; /* Black text */
+    }
+    h1, h2, h3 {
+      color: #2c3e50;
+    }
+    a {
+      color: #2980b9;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: #ffffff;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+    .info {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Book Data Web Project</h1>
+
+  <div class="info">
+    <p><strong>Name:</strong> Jayden Oats</p>
+    <p><strong>Affiliation:</strong> Kennesaw State University</p>
+    <p><strong>Course:</strong> Information Technology 4403</p>
+    <p><strong>Course Link:</strong> <a href="http://ccse.kennesaw.edu/it" target="_blank">http://ccse.kennesaw.edu/it</a></p>
+  </div>
+
+  <h2>Project Overview</h2>
+  <p>This individual project explores how to retrieve, parse, and display book data using JSON files and JavaScript/jQuery. The goal is to create a clean, readable presentation of book information from both Google Books and OpenLibrary APIs.</p>
+
+  <h2>Project Milestones</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Milestone</th>
+        <th>Description</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Milestone 1</td>
+        <td>Display a single book's data from Google Books API</td>
+        <td><a href="milestone1.html">View Milestone 1</a></td>
+      </tr>
+      <tr>
+        <td>Milestone 2</td>
+        <td>Display a list of books from Google Books search results</td>
+        <td><a href="milestone2.html">View Milestone 2</a></td>
+      </tr>
+      <tr>
+        <td>Milestone 3</td>
+        <td>Bonus: Display data from OpenLibrary API</td>
+        <td><a href="milestone3.html">View Milestone 3</a></td>
+      </tr>
+      <tr>
+        <td>Milestone 4</td>
+        <td>Final Project Integration and UI Cleanup</td>
+        <td><a href="milestone4.html">View Milestone 4</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Data Files Used</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>JSON File/Content</th>
+        <th>Source</th>
+        <th>Description</th>
+        <th>Example Webpage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>google-books-book.json</td>
+        <td><a href="https://www.googleapis.com/books/v1/volumes/Wfan6L9RGgYC" target="_blank">Google Books API</a></td>
+        <td>Single book information</td>
+        <td><a href="https://books.google.com/books?id=Wfan6L9RGgYC" target="_blank">View Example</a></td>
+      </tr>
+      <tr>
+        <td>google-books-search.json</td>
+        <td><a href="https://www.googleapis.com/books/v1/volumes?q=modern%20web" target="_blank">Google Books Search</a></td>
+        <td>List of books for query "modern web"</td>
+        <td><a href="http://cse.google.com/cse?cx=013493258683483688568:xhfa6ctm1ki&q=web#gsc.tab=0&gsc.q=modern%20web" target="_blank">View Example</a></td>
+      </tr>
+      <tr>
+        <td>openlibrary-books.json</td>
+        <td><a href="https://openlibrary.org/api/books?bibkeys=ISBN:0201558025,LCCN:93005405&format=json&jscmd=data" target="_blank">OpenLibrary API</a></td>
+        <td>Multiple books by ISBN and LCCN</td>
+        <td><a href="https://openlibrary.org" target="_blank">View OpenLibrary</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>
