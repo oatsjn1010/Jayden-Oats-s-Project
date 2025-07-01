@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Milestone 2 - Google Books App</title>
+<style>
+  body {
+    background-color: #e0e0e0;
+    color: #000;
+    font-family: Arial, sans-serif;
+    padding: 30px;
+    margin: 0;
+  }
+  header {
+    margin-bottom: 20px;
+  }
+  nav a {
+    margin-right: 15px;
+    text-decoration: none;
+    color: #2980b9;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  nav a:hover, nav a.active {
+    text-decoration: underline;
+  }
+  h1 {
+    color: #2c3e50;
+    margin-top: 0;
+  }
+  .book-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  .book-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+    width: 180px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .book-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+  .book-card a {
+    font-weight: bold;
+    margin: 10px 0 5px;
+    color: #2980b9;
+    text-decoration: none;
+  }
+  .book-card a:hover {
+    text-decoration: underline;
+  }
+  .pagination {
+    margin-top: 15px;
+    text-align: center;
+  }
+  .pagination select {
+    font-size: 1rem;
+    padding: 5px 10px;
+  }
+  .details-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .details-container img {
+    max-width: 200px;
+    float: right;
+    margin-left: 20px;
+    border-radius: 6px;
+  }
+  .details-container h2 {
+    margin-top: 0;
+  }
+  .clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  .book-preview {
+    margin-top: 30px;
+  }
+  form {
+    margin-top: 0;
+  }
+  input[type="text"] {
+    width: 70%;
+    padding: 8px;
+    font-size: 1rem;
+  }
+  button {
+    padding: 8px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  #results-info {
+    margin-top: 15px;
+  }
+  #back-button {
+    margin-bottom: 15px;
+    cursor: pointer;
+    background: #2980b9;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+  }
+  #back-button:hover {
+    background: #1c5a85;
+  }
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a id="nav-home" class="active">Home</a>
+    <a id="nav-bookshelf">My Bookshelf</a>
+    <a href="index.html" target="_blank">Home Page</a>
+    <a href="milestone1.html" target="_blank">Milestone 1</a>
+    <a href="milestone2.html" target="_blank">Milestone 2</a>
+    <a href="milestone3.html" target="_blank">Milestone 3</a>
+    <a href="milestone4.html" target="_blank">Milestone 4</a>
+  </nav>
+</header>
+
+<!-- Home/Search View -->
+<section id="view-home">
+  <h1>Book Search</h1>
+  <form id="search-form">
+    <input type="text" id="search-input" placeholder="Enter search terms" required />
+    <button type="submit">Search</button>
+  </form>
+  <div id="results-info"></div>
+  <div class="pagination" style="display:none;">
+    <label for="page-select">Page: </label>
+    <select id="page-select"></select>
+  </div>
+  <div class="book-list" id="book-list"></div>
+</section>
+
+<!-- Book Details View -->
+<section id="view-details" style="display:none;">
+  <h1>Book Details</h1>
+  <button id="back-button">&larr; Back</button>
+  <div id="book-details" class="details-container clearfix"></div>
+  <div id="book-preview" class="book-preview"></div>
+</section>
+
+<!-- Bookshelf View -->
+<section id="view-bookshelf" style="display:none;">
+  <h1>My Public Bookshelf</h1>
+  <div id="bookshelf-list" class="book-list">Loading bookshelf...</div>
+</section>
+
+<script>
+$(function() {
+  const maxResults = 60;
+  const resultsPerPage = 12;
+  let currentResults = [];
+  let currentPage = 1;
+
+  const userId = "108300120200676470548";
+  const bookshelfId = "3";
+
+  function setActiveNav(navId) {
+    $('nav a').removeClass('active');
+    $(`#${navId}`).addClass('active');
+  }
+
+  function showView(viewId) {
+    $('section').hide();
+    $(`#${viewId}`).show();
+  }
+
+  function renderBooks(books, containerSelector) {
+    const $container = $(containerSelector);
+    $container.empty();
+    if (!books || books.length === 0) {
+      $container.html('<p>No books found.</p>');
+      return;
+    }
+    books.forEach(book => {
+      const info = book.volumeInfo;
+      const title = info.title || "No Title";
+      const authors = info.authors ? info.authors.join(", ") : "Unknown Author";
+      const thumbnail = info.imageLinks ? info.imageLinks.smallThumbnail : "";
+
+      const cardHtml = `
+        <div class="book-card">
+          ${thumbnail ? `<img src="${thumbnail}" alt="Book Cover" />` : ''}
+          <a href="#" class="book-link" data-id="${book.id}">${title}</a>
+          <p>${authors}</p>
+        </div>
+      `;
+      $container.append(cardHtml);
+    });
+  }
+
+  function renderPagination(totalItems) {
+    const totalPages = Math.ceil(totalItems / resultsPerPage);
+    const $select = $('#page-select');
+    $select.empty();
+    for(let i = 1; i <= totalPages; i++) {
+      $select.append(`<option value="${i}">${i}</option>`);
+    }
+    $('.pagination').toggle(totalPages > 1);
+    $select.off('change').on('change', function() {
+      currentPage = parseInt($(this).val());
+      renderPage(currentPage);
+    });
+  }
+
+  function renderPage(page) {
+    const start = (page - 1) * resultsPerPage;
+    const end = start + resultsPerPage;
+    renderBooks(currentResults.slice(start, end), '#book-list');
+  }
+
+  $('#nav-home').click(() => {
+    setActiveNav('nav-home');
+    showView('view-home');
+    $('#results-info').text('');
+    $('#book-list').empty();
+    $('.pagination').hide();
+    currentResults = [];
+    currentPage = 1;
+    $('#search-input').val('');
+  });
+
+  $('#nav-bookshelf').click(() => {
+    setActiveNav('nav-bookshelf');
+    showView('view-bookshelf');
+    loadBookshelf();
+  });
+
+  $('#search-form').submit(function(e) {
+    e.preventDefault();
+    const query = $('#search-input').val().trim();
+    if (!query) return;
+
+    $('#results-info').text('Loading...');
+    $('#book-list').empty();
+    $('.pagination').hide();
+
+    $.getJSON(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=40`, function(data1) {
+      if (!data1.items || data1.items.length === 0) {
+        $('#results-info').text('No results found.');
+        return;
+      }
+      const totalItems = Math.min(data1.totalItems, maxResults);
+
+      if (totalItems > 40) {
+        $.getJSON(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&startIndex=40&maxResults=${totalItems - 40}`, function(data2) {
+          currentResults = data1.items.concat(data2.items);
+          $('#results-info').text(`Found ${totalItems} results.`);
+          renderPagination(totalItems);
+          currentPage = 1;
+          $('#page-select').val(1);
+          renderPage(currentPage);
+        }).fail(() => {
+          $('#results-info').text('Failed to load additional results.');
+        });
+      } else {
+        currentResults = data1.items;
+        $('#results-info').text(`Found ${totalItems} results.`);
+        renderPagination(totalItems);
+        currentPage = 1;
+        $('#page-select').val(1);
+        renderPage(currentPage);
+      }
+    }).fail(() => {
+      $('#results-info').text('Search failed. Please try again.');
+    });
+  });
+
+  $(document).on('click', '.book-link', function(e) {
+    e.preventDefault();
+    const bookId = $(this).data('id');
+    loadBookDetails(bookId);
+  });
+
+  $('#back-button').click(() => {
+    setActiveNav('nav-home');
+    showView('view-home');
+  });
+
+  function loadBookshelf() {
+    if (userId === "YOUR_GOOGLE_USER_ID" || bookshelfId === "YOUR_BOOKSHELF_ID") {
+      $('#bookshelf-list').html('<p>Please update the code with your actual Google User ID and Bookshelf ID.</p>');
+      return;
+    }
+    $('#bookshelf-list').html('Loading bookshelf...');
+    $.getJSON(`https://www.googleapis.com/books/v1/users/${userId}/bookshelves/${bookshelfId}/volumes`, function(data) {
+      renderBooks(data.items || [], '#bookshelf-list');
+    }).fail(() => {
+      $('#bookshelf-list').html('<p>Failed to load bookshelf data. Ensure your bookshelf is public and the IDs are correct.</p>');
+    });
+  }
+
+  function loadBookDetails(bookId) {
+    if (!bookId) {
+      alert("Invalid book ID.");
+      return;
+    }
+    showView('view-details');
+    $('#book-details').html('<p>Loading book details...</p>');
+    $('#book-preview').empty();
+
+    $.getJSON(`https://www.googleapis.com/books/v1/volumes/${bookId}`, function(data) {
+      const book = data.volumeInfo;
+      const title = book.title || 'N/A';
+      const authors = book.authors ? book.authors.join(', ') : 'N/A';
+      const publisher = book.publisher || 'N/A';
+      const publishedDate = book.publishedDate || 'N/A';
+      const description = book.description || 'N/A';
+      const pageCount = book.pageCount || 'N/A';
+      const categories = book.categories ? book.categories.join(', ') : 'N/A';
+      const language = book.language || 'N/A';
+      const previewLink = book.previewLink || '';
+      const thumbnail = book.imageLinks ? book.imageLinks.thumbnail : '';
+      let saleInfo = 'Not for sale';
+
+      if(data.saleInfo && data.saleInfo.listPrice) {
+        saleInfo = `${data.saleInfo.listPrice.amount} ${data.saleInfo.listPrice.currencyCode}`;
+      }
+
+      const detailsHtml = `
+        ${thumbnail ? `<img src="${thumbnail}" alt="Book cover" />` : ''}
+        <h2>${title}</h2>
+        <p><strong>Authors:</strong> ${authors}</p>
+        <p><strong>Publisher:</strong> ${publisher}</p>
+        <p><strong>Published Date:</strong> ${publishedDate}</p>
+        <p><strong>Page Count:</strong> ${pageCount}</p>
+        <p><strong>Categories:</strong> ${categories}</p>
+        <p><strong>Language:</strong> ${language}</p>
+        <p><strong>Price:</strong> ${saleInfo}</p>
+        <p><strong>Description:</strong><br>${description}</p>
+        ${previewLink ? `<p><a href="${previewLink}" target="_blank" rel="noopener noreferrer">View Preview on Google Books</a></p>` : ''}
+      `;
+      $('#book-details').html(detailsHtml);
+
+      if(previewLink) {
+        $('#book-preview').html(`
+          <iframe
+            src="https://books.google.com/books?id=${bookId}&printsec=frontcover&output=embed"
+            width="100%"
+            height="480"
+            style="border:none"
+            allowfullscreen
+            loading="lazy"
+          ></iframe>
+        `);
+      }
+    }).fail(() => {
+      $('#book-details').html('<p>Failed to load book details.</p>');
+    });
+  }
+
+  // Start on home view
+  setActiveNav('nav-home');
+  showView('view-home');
+});
+</script>
+
+</body>
+</html>
+
