@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Milestone 4 - Bonus SPA</title>
+  <style>
+    body {
+      background-color: #e0e0e0;
+      font-family: Arial, sans-serif;
+      color: #000;
+      margin: 0;
+      padding: 20px;
+    }
+    .nav a {
+      margin-right: 15px;
+      text-decoration: none;
+      color: #2980b9;
+      font-weight: bold;
+    }
+    .controls {
+      margin-bottom: 10px;
+    }
+    .grid .book-item {
+      display: inline-block;
+      width: 200px;
+      margin: 10px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .list .book-item {
+      display: block;
+      margin: 10px 0;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .book-item img {
+      width: 100px;
+    }
+    .view-toggle {
+      margin-left: 15px;
+    }
+    .history {
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+    .history span {
+      background: #dfe6e9;
+      margin: 2px;
+      padding: 4px 8px;
+      border-radius: 5px;
+      display: inline-block;
+      cursor: pointer;
+    }
+    /* Lightbox Styles */
+    #lightbox {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      overflow: auto;
+    }
+    #lightboxContent {
+      background: #fff;
+      margin: 40px auto;
+      padding: 20px;
+      max-width: 600px;
+      border-radius: 10px;
+      position: relative;
+    }
+    #lightboxClose {
+      position: absolute;
+      top: 5px; right: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      color: red;
+    }
+  </style>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://unpkg.com/mustache@latest/mustache.min.js"></script>
+  <script src="https://www.google.com/books/jsapi.js"></script>
+</head>
+<body>
+
+  <div class="nav">
+    <a href="#" onclick="showSearch()">Search</a>
+    <a href="#" onclick="showBookshelf()">My Bookshelf</a>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="searchInput" placeholder="Search books...">
+    <button id="searchBtn">Search</button>
+
+    <span class="view-toggle">
+      <label><input type="radio" name="view" value="grid" checked> Grid</label>
+      <label><input type="radio" name="view" value="list"> List</label>
+    </span>
+  </div>
+
+  <div class="history" id="searchHistory"></div>
+
+  <div id="searchResults" class="grid"></div>
+  <div id="bookshelfResults" class="grid" style="display: none;"></div>
+
+  <!-- Book Template -->
+  <script id="book-template" type="x-tmpl-mustache">
+    <div class="book-item" data-id="{{id}}">
+      <img src="{{thumbnail}}" alt="Cover">
+      <h4>{{title}}</h4>
+    </div>
+  </script>
+
+  <!-- Lightbox -->
+  <div id="lightbox">
+    <div id="lightboxContent">
+      <span id="lightboxClose">✖</span>
+      <div id="bookDetailContent"></div>
+      <div id="viewerCanvas" style="width:100%; height:500px; margin-top:20px;"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentQuery = '';
+    let currentPage = 0;
+    let loading = false;
+    let view = 'grid';
+    const historySet = new Set();
+
+    function renderBooks(books, target) {
+      const template = $('#book-template').html();
+      books.forEach(book => {
+        const html = Mustache.render(template, {
+          id: book.id,
+          title: book.volumeInfo.title || 'No Title',
+          thumbnail: book.volumeInfo.imageLinks?.thumbnail || ''
+        });
+        $(target).append(html);
+      });
+    }
+
+    function searchBooks(query, startIndex = 0) {
+      if (loading) return;
+      loading = true;
+      const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&startIndex=${startIndex}&maxResults=10`;
+
+      $.getJSON(url, function (data) {
+        renderBooks(data.items || [], '#searchResults');
+        loading = false;
+      });
+    }
+
+    function loadBookshelf() {
+      const userId = "108300120200676470548";
+      const shelfId = "1002";
+      const url = `https://www.googleapis.com/books/v1/users/${userId}/bookshelves/${shelfId}/volumes`;
+
+      $.getJSON(url, function (data) {
+        renderBooks(data.items || [], '#bookshelfResults');
+      });
+    }
+
+    function showSearch() {
+      $('#bookshelfResults').hide();
+      $('#searchResults').show().empty();
+      if (currentQuery) {
+        currentPage = 0;
+        searchBooks(currentQuery);
+      }
+    }
+
+    function showBookshelf() {
+      $('#searchResults').hide();
+      $('#bookshelfResults').show().empty();
+      loadBookshelf();
+    }
+
+    function addToHistory(term) {
+      if (!historySet.has(term)) {
+        historySet.add(term);
+        $('#searchHistory').prepend(`<span data-term="${term}">${term}</span> `);
+      }
+    }
+
+    function showBookDetail(bookId) {
+      const url = `https://www.googleapis.com/books/v1/volumes/${bookId}`;
+      $.getJSON(url, function (book) {
+        const html = `
+          <h2>${book.volumeInfo.title}</h2>
+          <p><strong>Authors:</strong> ${(book.volumeInfo.authors || []).join(', ')}</p>
+          <p><strong>Publisher:</strong> ${book.volumeInfo.publisher || 'Unknown'}</p>
+          <p><strong>Description:</strong> ${book.volumeInfo.description || 'No description'}</p>
+        `;
+        $('#bookDetailContent').html(html);
+
+        // Google Books Viewer
+        google.books.load();
+        google.books.setOnLoadCallback(() => {
+          const viewer = new google.books.DefaultViewer(document.getElementById('viewerCanvas'));
+          viewer.load(bookId);
+        });
+
+        $('#lightbox').fadeIn();
+      });
+    }
+
+    $(document).ready(function () {
+      $('#searchBtn').on('click', function () {
+        const query = $('#searchInput').val().trim();
+        if (query) {
+          currentQuery = query;
+          currentPage = 0;
+          $('#searchResults').empty();
+          searchBooks(query);
+          addToHistory(query);
+        }
+      });
+
+      $('input[name="view"]').on('change', function () {
+        view = $(this).val();
+        $('#searchResults, #bookshelfResults')
+          .removeClass('grid list')
+          .addClass(view);
+      });
+
+      $(document).on('click', '.book-item', function () {
+        const bookId = $(this).data('id');
+        showBookDetail(bookId);
+      });
+
+      $(document).on('click', '#lightboxClose', function () {
+        $('#lightbox').fadeOut();
+      });
+
+      $(document).on('click', '#searchHistory span', function () {
+        const term = $(this).data('term');
+        $('#searchInput').val(term);
+        $('#searchBtn').click();
+      });
+
+      // Infinite scroll
+      $(window).on('scroll', function () {
+        if ($('#searchResults').is(':visible') && !loading) {
+          if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
+            currentPage++;
+            searchBooks(currentQuery, currentPage * 10);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
